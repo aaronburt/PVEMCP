@@ -1,4 +1,4 @@
-import https from "https";
+import { Agent } from "undici";
 
 const host = process.env.PVE_HOST ?? "";
 const tokenId = process.env.PVE_TOKEN_ID ?? "";
@@ -12,9 +12,24 @@ if (!host || !tokenId || !tokenSecret) {
   process.exit(1);
 }
 
-const agent = new https.Agent({ rejectUnauthorized: verifySSL });
+const dispatcher = new Agent({
+  connect: { rejectUnauthorized: verifySSL },
+});
 
 export const isReadOnly = process.env.PVE_READ_ONLY !== "false";
+
+export function pveBool(value: boolean): 1 | 0 {
+  return value ? 1 : 0;
+}
+
+const MAX_ERROR_LENGTH = 256;
+
+function sanitizeErrorText(text: string): string {
+  const truncated = text.length > MAX_ERROR_LENGTH
+    ? text.slice(0, MAX_ERROR_LENGTH) + "…[truncated]"
+    : text;
+  return truncated.replace(/PVEAPIToken=[^\s&]*/gi, "PVEAPIToken=[REDACTED]");
+}
 
 async function request<T>(
   method: string,
@@ -31,18 +46,18 @@ async function request<T>(
     Accept: "application/json",
   };
 
-  const init: RequestInit & { agent?: https.Agent } = { method, headers, agent };
+  const init: RequestInit = { method, headers, dispatcher } as RequestInit;
 
   if (body && Object.keys(body).length > 0) {
     headers["Content-Type"] = "application/json";
     init.body = JSON.stringify(body);
   }
 
-  const res = await fetch(url, init as RequestInit);
+  const res = await fetch(url, init);
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`PVE API ${method} ${path} → ${res.status}: ${text}`);
+    throw new Error(`PVE API ${method} ${path} → ${res.status}: ${sanitizeErrorText(text)}`);
   }
 
   const json = (await res.json()) as { data: T };
