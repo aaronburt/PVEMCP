@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { pveGet } from "../client.js";
+import { pveGet } from "../../client.js";
 
-export function registerClusterTools(server: McpServer) {
+export function registerReadClusterTools(server: McpServer) {
   server.registerTool(
     "pve_cluster_status",
     {

@@ -1,10 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { pveGet, pvePost, isReadOnly } from "../client.js";
+import { pveGet } from "../../client.js";
 
 const nodeParam = { node: z.string().describe("Proxmox node name (e.g. pve)") };
 
-export function registerNodeTools(server: McpServer) {
+export function registerReadNodeTools(server: McpServer) {
   server.registerTool(
     "pve_list_nodes",
     {
@@ -27,32 +27,6 @@ export function registerNodeTools(server: McpServer) {
       return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
     }
   );
-
-  if (!isReadOnly) {
-    server.registerTool(
-      "pve_node_reboot",
-      {
-        description: "Reboot a Proxmox node",
-        inputSchema: nodeParam,
-      },
-      async ({ node }) => {
-        const data = await pvePost(`/nodes/${node}/status`, { command: "reboot" });
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-    );
-
-    server.registerTool(
-      "pve_node_shutdown",
-      {
-        description: "Shut down a Proxmox node",
-        inputSchema: nodeParam,
-      },
-      async ({ node }) => {
-        const data = await pvePost(`/nodes/${node}/status`, { command: "shutdown" });
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-    );
-  }
 
   server.registerTool(
     "pve_node_syslog",
