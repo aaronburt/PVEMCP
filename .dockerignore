@@ -1,0 +1,11 @@
+node_modules
+build
+.env
+.git
+.github
+*.log
+README.md
+LICENSE
+SECURITY.md
+docker-compose.yml
+Dockerfile
