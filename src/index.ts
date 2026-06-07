@@ -20,22 +20,35 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-registerReadAccessTools(server);
-registerReadClusterTools(server);
-registerReadLxcTools(server);
-registerReadNetworkTools(server);
-registerReadNodeTools(server);
-registerReadQemuTools(server);
-registerReadStorageTools(server);
+const readRegistrars = [
+  registerReadAccessTools,
+  registerReadClusterTools,
+  registerReadLxcTools,
+  registerReadNetworkTools,
+  registerReadNodeTools,
+  registerReadQemuTools,
+  registerReadStorageTools,
+];
+
+const writeRegistrars = [
+  registerWriteAccessTools,
+  registerWriteLxcTools,
+  registerWriteNetworkTools,
+  registerWriteNodeTools,
+  registerWriteQemuTools,
+  registerWriteStorageTools,
+];
+
+for (const register of readRegistrars) {
+  register(server);
+}
 
 if (!isReadOnly) {
-  registerWriteAccessTools(server);
-  registerWriteLxcTools(server);
-  registerWriteNetworkTools(server);
-  registerWriteNodeTools(server);
-  registerWriteQemuTools(server);
-  registerWriteStorageTools(server);
+  for (const register of writeRegistrars) {
+    register(server);
+  }
 }
+
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
